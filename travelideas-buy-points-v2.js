@@ -33,6 +33,7 @@
     ':host{display:block;color:#27303d;font-family:system-ui,-apple-system,"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:16px;line-height:1.6}',
     '*,*:before,*:after{box-sizing:border-box}',
     '.ti-bp-shell{max-width:100%;background:transparent}',
+    '.ti-bp-section-label{font-size:1rem;font-weight:800;color:#765212;margin:0 0 8px;padding:0 0 6px;border-bottom:1px solid #ead9a8}',
     '.ti-bp-heading{font-size:1.23rem;line-height:1.4;font-weight:800;color:#172b47;margin:20px 0 12px;padding:0 0 9px;border-bottom:3px solid #e4b342}',
     '.ti-bp-heading:first-child{margin-top:0}',
     '.ti-bp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}',
@@ -131,6 +132,7 @@
   function render(items) {
     mounts.forEach(function (mount) {
       mount.shell.replaceChildren();
+      mount.shell.appendChild(el('div','ti-bp-section-label','💰 更多買分資訊'));
       var types=mount.mode==='all' ? ['hotel','airline'] : [mount.mode];
       types.forEach(function (type) {
         var list=items.filter(function (x) {return x.type===type;});
@@ -156,9 +158,6 @@
         mount.shell.appendChild(grid);
       });
       if (!mount.shell.children.length) {showError('未找到買分活動。');return;}
-      var foot=el('p','ti-bp-foot','內容與順序依 Blogger 原始文章同步。 ');
-      var a=el('a',null,'查看原始文章');a.href=SOURCE;a.target='_blank';a.rel='noopener noreferrer';foot.appendChild(a);
-      mount.shell.appendChild(foot);
     });
   }
   function hasMatchingPermalink(entry) {
