@@ -10,7 +10,7 @@
 (function () {
   'use strict';
   var SOURCE = 'https://www.travelideas.tw/2023/11/Marriott-IHG-Hilton-11.html';
-  var FEED = 'https://www.travelideas.tw/feeds/posts/default';
+  var FEED = 'https://www.travelideas.tw/feeds/posts/default/6490677577758392527';
   var SEL = '[data-travelideas-buy-points]';
   var targets = Array.prototype.slice.call(document.querySelectorAll(SEL)).filter(function (el) {
     return !el.hasAttribute('data-ti-bp-v3-ready');
@@ -215,37 +215,35 @@
     } catch (e) {return false;}
   }
   // 與已在 1shop 運作的舊檔分離，使用獨立 callback namespace，不覆蓋舊版全域變數。
-  function jsonp(args,onOk,onFail) {
+  function jsonp(onOk,onFail) {
     var id='__ti_bp_v3_'+Date.now()+'_'+Math.random().toString(36).slice(2);
     var script=document.createElement('script');var finished=false;var timer;
     function finish() { if(finished)return false;finished=true;clearTimeout(timer);script.remove();try{delete window[id];}catch(e){window[id]=undefined;}return true; }
     window[id]=function (data) {if(finish())onOk(data);};
-    var url=FEED+'?alt=json-in-script&callback='+encodeURIComponent(id)+'&max-results='+args.max+'&_='+Date.now();
-    if(args.q)url+='&q='+encodeURIComponent(args.q);
-    if(args.start)url+='&start-index='+args.start;
+    var url=FEED+'?alt=json-in-script&callback='+encodeURIComponent(id)+'&_='+Date.now();
     script.src=url; script.async=true;
     script.onerror=function(){if(finish())onFail();};
     timer=setTimeout(function(){if(finish())onFail();},13000);
     document.head.appendChild(script);
   }
-  var searches=[{q:'酒店優惠活動推薦',max:100},{q:'Marriott IHG Hilton',max:100},{max:150}];
-  var searchIndex=0, page=0, lastError='';
-  function next() {
-    if(searchIndex>=searches.length) {showError(lastError||'無法在 Blogger 公開 Feed 找到指定文章，請檢查文章摘要設定。');return;}
-    var args=searches[searchIndex];
-    jsonp(args,function (response) {
-      var entries=(response && response.feed && response.feed.entry)||[];
-      var match=entries.find(hasMatchingPermalink);
-      if(match) {
-        var html=getPostHtml(match);
-        if(!html) {showError('Blogger Feed 未提供完整文章內容。');return;}
-        var items=extractItems(html);
-        if(!items || !items.length) {showError('找不到完整的「酒店集團買分／航司買分」區塊，請檢查原文的三個章節標題與 📌 活動標記。');return;}
-        render(items);return;
-      }
-      if(!args.q && entries.length===args.max && page<12) {page++;args.start=(args.start||1)+args.max;next();return;}
-      searchIndex++;next();
-    },function(){lastError='讀取 Blogger Feed 失敗，請稍後重新整理。';searchIndex++;next();});
-  }
-  next();
+  jsonp(function (response) {
+    var entry = response && response.entry;
+    if (!entry || !hasMatchingPermalink(entry)) {
+      showError('Blogger Feed 找不到指定文章。');
+      return;
+    }
+    var html = getPostHtml(entry);
+    if (!html) {
+      showError('Blogger Feed 未提供完整文章內容。');
+      return;
+    }
+    var items = extractItems(html);
+    if (!items || !items.length) {
+      showError('找不到完整的「酒店集團買分／航司買分」區塊，請檢查原文的三個章節標題與 📌 活動標記。');
+      return;
+    }
+    render(items);
+  }, function () {
+    showError('讀取 Blogger Feed 失敗，請稍後重新整理。');
+  });
 })();
